@@ -1,0 +1,522 @@
+NuR2 WATERSHED NUTRIENT RESEARCH — PROJECT CONTEXT DOCUMENT
+=============================================================
+Prepared as a handoff/context brief for continuing this work in Claude Code.
+Covers everything discussed from the start of the research conversation.
+
+
+1. BACKGROUND — WHAT IS NuR2
+-----------------------------
+NuR2 ("Nutrient Recovery Resilience") is a watershed-sustainability venture
+(nur2.org) focused on America's agricultural nutrient runoff problem.
+
+Core thesis:
+- Billions of pounds of valuable nutrients (nitrogen, phosphorus) leave
+  farm fields every year via runoff, instead of staying in the soil.
+- Once in waterways, these nutrients feed harmful algal blooms, degrade
+  water quality, raise municipal water treatment costs, and stress
+  entire watersheds and fisheries.
+- Historically, water quality efforts focused downstream (treatment
+  plants, lake cleanups, stormwater infrastructure) or on "point source"
+  pollution (factories, sewage — addressed by the 1970s Clean Water Act).
+  Non-point source agricultural runoff was never solved at scale.
+- NuR2's pitch: treat this as an infrastructure problem, not a farming
+  failure. Build systems that intercept nutrients AT THE FIELD EDGE
+  before they reach waterways, recover them as a reusable resource, and
+  reinvest the value back into farm/watershed resilience.
+- Model: "Capture -> Recover -> Return"
+- AI angle: use AI-powered monitoring and watershed modeling to find the
+  highest-leverage interception points and to verify/measure nutrient
+  reduction outcomes (important for credibility with regulators,
+  investors, and farm partners).
+
+The site targets four audiences: farmers (nutrients as recoverable
+assets, not losses), communities (lower treatment costs, cleaner
+drinking water), regulators (measurable/verified reduction outcomes),
+and conservation groups (healthier watersheds).
+
+
+2. RELATED PROGRAM DISCOVERED — ANGLER SCIENCE DRIFTLESS AREA PROGRAM
+-----------------------------------------------------------------------
+While researching potential data sources, we found:
+Angler Science Driftless Area Program — run by Trout Unlimited (TU) in
+partnership with MobileH2O, LLC (mobileh2o.com/driftlessprogram)
+
+What it is:
+- A citizen-science water quality monitoring program covering the
+  "Driftless Area" (unglaciated, hilly trout-stream region spanning
+  parts of Wisconsin, Minnesota, Iowa, and Illinois).
+- Anglers use a smartphone app called WiseH2O plus physical test kits to
+  record stream-side water quality readings while fishing: nitrate,
+  nitrite, orthophosphate, pH, hardness, alkalinity, water temperature,
+  clarity, water level, and visible disturbances (bank erosion, algal
+  blooms, livestock in water, pipe/drain outflow, fish barriers, trash,
+  fish kills).
+- Scale: 2,319 observations from 2019-2024 (442 in 2024 alone), growing
+  toward a goal of 3,000+ by 2025.
+- Participants: anglers from 14 TU chapters, plus biologists/resource
+  agents from US Fish & Wildlife Service, and the Wisconsin, Minnesota,
+  and Iowa Departments of Natural Resources.
+- Funded/supported by: TU's Coldwater Conservation Fund, TU Driftless
+  Area Restoration Effort (TUDARE), USFWS, National Fish and Wildlife
+  Foundation, National Fish Habitat Partnership.
+- Output: a public map/dashboard, a "Driftless Area Scorecard"
+  summarizing conditions and restoration opportunities, and downloadable
+  raw data (this is the file we now have).
+
+Why this is relevant to NuR2:
+- Free, multi-year, geotagged water quality dataset across an
+  agriculturally-adjacent watershed region.
+- A built-in, trusted local network (TU chapters + state DNRs + USFWS)
+  that could serve as a partner, pilot-region entry point, or
+  outcome-verification partner.
+- A ready-made "before/after" narrative structure that matches NuR2's
+  own site messaging.
+
+
+3. THE DATA FILE WE OBTAINED
+------------------------------
+File: TUDB-241030_Distn_v03.xlsx
+(Already placed in the "nur2" project folder alongside this document.)
+
+Structure — 11 sheets:
+TUDB (main data), Use, ALK, HRD, pH, NO2, NO3, OPhos, Water Temp,
+Disturbances, Scorecard, Metadata
+
+Main sheet "TUDB":
+- 2,319 observation rows, 2019-2024 (header row starts at row 7 of the
+  raw sheet — first 6 rows are title/metadata clutter).
+- 70 columns. Key fields:
+  - Observation Date/Time (UTC + Local), Year, Month
+  - Monitoring Site name, Longitude, Latitude
+  - HUC12 Code, HUC12 Name, HUC10 Name  <-- these are USGS official
+    nested watershed boundary codes, already assigned to every
+    observation. This is the single most valuable field in the file —
+    it lets us aggregate data by real hydrological watershed units
+    without doing our own spatial join.
+  - NO3 Bin (5n1) (ppm) — nitrate from one test-kit version
+  - NO3 Bin (2n1) (ppm) — nitrate from a second test-kit version
+  - NO2 Bin columns — nitrite
+  - Orthophosphate (ppb)
+  - pH Bin, ALK Bin (alkalinity), HRD Bin (hardness), Water Temperature
+  - Disturbance flags (each coded -1 = not reported / 0 = absent /
+    1 = present): Bank Erosion, Trash, Pipe/Drain Outflow, Livestock in
+    Water, Algal Bloom, Fish Kill, Fish Barrier
+  - Water Level, Clarity, Weather conditions, free-text Observation
+    Comments
+  - Stream name (Primary Stream, All Streams), Trout Stream Flag,
+    Brook Trout Stream Flag
+  - TU Chapter Area, Observer Chapter Affiliation
+
+Geographic extent: roughly Minneapolis/Rochester MN in the northwest to
+Dubuque/Madison area in the southeast — i.e., the full Driftless Area.
+
+
+4. DATA QUALITY ISSUES / LIMITATIONS WE IDENTIFIED
+-----------------------------------------------------
+Important — found by direct inspection of the file, not assumption:
+
+a) TWO NITRATE COLUMNS, ONE IS UNUSABLE
+   - "NO3 Bin (5n1) (ppm)" — only 43 valid rows, and the values are
+     nonsensical (negative numbers, range -116 to +148). This is a
+     coding/parsing artifact from an older test-kit format. DO NOT USE.
+   - "NO3 Bin (2n1) (ppm)" — 1,880 valid rows, sensible range (0-20 ppm,
+     matching real nitrate test kit bins). USE THIS COLUMN.
+
+b) SCREENING-KIT ACCURACY, NOT LAB-GRADE
+   Angler-collected test kits give coarse "bin" readings, not precise
+   lab measurements. Fine for flagging problem areas, not for precise
+   load calculations.
+
+c) SPATIAL BIAS TOWARD ACCESSIBLE FISHING SPOTS
+   Observations cluster where anglers like to fish (public access,
+   known trout streams) — not necessarily where nutrient loading is
+   objectively worst. Areas with bad runoff but no nearby fishable
+   water are likely underrepresented.
+
+d) TEMPORAL BIAS / NO STORM-EVENT DATA
+   Sampling is irregular, tied to when anglers happen to fish — skewed
+   toward fishing season (spring/fall). Most nutrient runoff spikes
+   happen during storm events, which this dataset largely misses.
+
+e) NO PAIRED STREAMFLOW/DISCHARGE DATA
+   The file has concentration (ppm/ppb) but not flow volume. Actual
+   nutrient LOAD = concentration x flow. A high reading in a low-flow
+   trickle may matter less than a moderate reading in high flow — we
+   can't calculate true load from this file alone.
+
+f) NO SOURCE ATTRIBUTION
+   A high nitrate/phosphate reading doesn't tell us WHO caused it.
+   Possible sources: row-crop fertilizer runoff, livestock operations,
+   septic systems, municipal wastewater, golf courses, etc. Farm
+   proximity on a map is not proof of causation.
+
+g) SINGLE-POINT READINGS VS. PERSISTENT PROBLEMS
+   One bad reading could be a storm event, temporary spill, or
+   measurement error. We should prioritize watersheds with REPEATED
+   high readings over time, not isolated red dots.
+
+Net conclusion: this dataset is a strong SCREENING / PRIORITIZATION
+layer, not a precise site-selection tool. It narrows hundreds of miles
+of watershed down to a manageable shortlist of watersheds worth deeper
+investigation — it should not be used alone to pick exact infrastructure
+sites or specific farms.
+
+
+4B. PRIOR ART — AN EXISTING TOOL ALREADY DOES PART OF THIS (IMPORTANT)
+--------------------------------------------------------------------------
+Before building our own siting tool from scratch, we should know this
+exists:
+
+THE AGRICULTURAL CONSERVATION PLANNING FRAMEWORK (ACPF)
+- A free, USDA-developed (Agricultural Research Service + NRCS) ArcGIS
+  toolbox, built specifically to identify site-specific locations for
+  conservation practices — including woodchip bioreactors, phosphorus
+  removal structures, saturated buffers, and constructed wetlands — at
+  the FIELD and EDGE-OF-FIELD level within a watershed.
+- Works at HUC12 watershed scale (same unit our data is already tagged
+  with). "Core Data" packages exist for over 50,000 agricultural HUC12
+  watersheds across the US.
+- Uses high-resolution elevation (LiDAR), soils, and FIELD BOUNDARY data
+  to hydro-condition terrain, determine which specific fields are most
+  prone to contribute runoff to streams, and recommend exactly where a
+  bioreactor, buffer, or wetland would be most effective.
+- Already in active use across the Corn Belt, including Driftless-area
+  states, coordinated through an "ACPF National Hub" (Iowa Water Center,
+  Iowa State University GIS Facility, North Central Region Water
+  Network, University of Wisconsin-Madison Extension).
+- Free to download; requires ArcGIS and roughly two days of training to
+  use effectively (built for GIS-literate watershed planners, not
+  self-service for farmers or the public).
+
+WHY THIS MATTERS FOR US:
+- This is the closest existing analog to "Step 3-5" of our pipeline
+  (siting conservation practices using watershed-scale geospatial data).
+  We should not reinvent this from zero.
+- Strategic options: (a) use ACPF's own Core Data / outputs directly for
+  our candidate watersheds instead of rebuilding field-level hydrology
+  from scratch, (b) build NuR2 as a layer ON TOP of ACPF-style siting —
+  adding the AI-driven prioritization across many watersheds at once,
+  the continuous verification/monitoring layer, and the economic model
+  — none of which ACPF itself provides, or (c) at minimum, benchmark our
+  own outputs against ACPF's recommendations for credibility.
+- This reinforces the reframe above: the siting methodology isn't a
+  blank space either. NuR2's differentiation is in doing this at
+  portfolio/multi-watershed scale with AI-driven prioritization, ongoing
+  verified measurement, and a farmer economic incentive — not in
+  inventing field-level siting logic that already exists.
+
+
+5. INITIAL ANALYSIS ALREADY COMPLETED
+----------------------------------------
+Using Python (pandas/openpyxl) on the TUDB sheet, we:
+1. Loaded the sheet with the correct header row (row 7).
+2. Confirmed to use the "NO3 Bin (2n1) (ppm)" column (clean data).
+3. Grouped all observations by HUC12 watershed code/name (the built-in
+   watershed tag).
+4. Filtered to watersheds with at least 5 observations (statistical
+   reliability — avoid single-reading noise).
+5. Computed per-watershed: observation count, average nitrate, % of
+   readings at/above 10 ppm (a common impairment threshold), average
+   orthophosphate, % high phosphate, and counts of algal bloom / bank
+   erosion / livestock-in-water / pipe-drain-outflow disturbance flags.
+6. Ranked watersheds by average nitrate.
+
+TOP RESULTS (worst average nitrate, min. 5 observations):
+
+Watershed (HUC12)                    Obs   Avg NO3   % >=10ppm  % High Phos  Bank Erosion flags
+Little Volga River, IA                14    12.5 ppm    64%         86%            11
+Coulee Creek-Volga River, IA          10    12.0 ppm    80%         60%             6
+Headwaters Volga River, IA            14    11.6 ppm    64%         14%             9
+Trout Brook, MN                       43     8.7 ppm    60%         42%             0
+Forestville Creek, MN/IA               8     8.3 ppm    50%         13%             1
+Brush Creek, IA                       24     8.1 ppm    46%         29%            15
+
+(Total: 109 HUC12 watersheds had 5+ observations; full ranked list can
+be regenerated/expanded from the script.)
+
+KEY PATTERN: the three worst watersheds (Little Volga River, Coulee
+Creek-Volga River, Headwaters Volga River) are all part of the same
+Volga River basin (Iowa) and cluster together geographically. A
+persistent cluster of elevated readings across a whole sub-basin is a
+much stronger, more trustworthy signal than a single isolated red dot
+on the map — this is a strong first candidate region for deeper
+investigation.
+
+
+6. GEOGRAPHIC / HYDROLOGICAL CONTEXT (Downstream Connectivity)
+-------------------------------------------------------------------
+The HUC12 codes already embedded in the data are part of USGS's
+official NESTED watershed hierarchy:
+   HUC12 (smallest) -> HUC10 -> HUC8 -> HUC6 -> HUC4 -> HUC2 (largest)
+
+All watersheds in this dataset sit within the UPPER MISSISSIPPI RIVER
+BASIN, which ultimately drains to the GULF OF MEXICO. This directly
+connects to the same "Gulf dead zone" narrative referenced on NuR2's own
+website (nutrient-driven hypoxic zones downstream of the Mississippi).
+
+Practical implication: a nutrient problem identified in one small HUC12
+sub-watershed (e.g., Little Volga River) doesn't stay contained — it
+flows downstream through every nested watershed below it until reaching
+the Mississippi mainstem. This downstream propagation can be precisely
+traced and quantified using USGS's NHDPlus flowline/watershed dataset
+(not yet pulled — see Next Steps).
+
+
+7. PROJECT GOAL
+-----------------
+Use AI/ML plus public geospatial data to identify the watersheds most
+likely to be sources of agricultural nutrient runoff — going beyond
+simple "look at the map and guess" — and produce a prioritized shortlist
+of candidate watersheds/sub-basins for NuR2 to investigate further for
+capture-infrastructure siting, pilot programs, or partnerships.
+
+Explicitly acknowledged: the citizen-science dataset alone is NOT
+sufficient for precise infrastructure site selection. It is a
+screening/prioritization layer. Final site selection requires
+additional data layers (below) and ground-truthing.
+
+IMPORTANT REFRAME — WHERE NuR2'S REAL DIFFERENTIATION IS:
+Edge-of-field nutrient capture technology itself (woodchip bioreactors,
+phosphorus removal structures, saturated buffers, constructed wetlands)
+is NOT new — it is decades-old, USDA-recognized, and reasonably
+effective when properly sited. We should stop framing this as
+"inventing a new machine nobody else has." The real gap in the field,
+and where NuR2 can actually differentiate, is:
+  1. Systematic, AI-driven, watershed-scale SITING — most current
+     installations happen through ad hoc government cost-share programs,
+     not rigorous, data-driven optimization across an entire river basin.
+  2. Continuous, VERIFIED measurement — most existing installations are
+     not monitored in real time, so nobody can currently prove "this
+     bioreactor removed X pounds of nitrogen this year." Building that
+     measurement/verification layer is a genuine gap.
+  3. An ECONOMIC MODEL that makes farmers want this — the tech works,
+     adoption is low partly due to lack of financial incentive. A
+     verified-outcome-based nutrient credit market (same logic as carbon
+     credit markets) could be the actual unlock.
+This is a more fundable, buildable, and honest pitch than "we invented
+ocean-scale filtration for farms" — and still a legitimately big deal if
+executed well, because scaling deployment of a known-good technology has
+changed the world before (e.g., solar panels existed for decades before
+cost/deployment innovations made them ubiquitous).
+
+
+8. PROPOSED PIPELINE / NEXT STEPS (in order)
+------------------------------------------------
+STEP 1 — Clean & standardize source data [DONE]
+  - Drop/ignore the broken "NO3 Bin (5n1)" column; use "NO3 Bin (2n1)".
+  - Standardize disturbance flag encoding (-1/0/1).
+
+STEP 2 — Watershed-level rollup by HUC12 [DONE, first pass]
+  - Aggregate by HUC12, require minimum observation count for
+    confidence, rank by severity (nitrate, phosphate, disturbance
+    flags). Expand to a full ranked list and consider a
+    persistence/confidence score (e.g., weight by observation count and
+    consistency of high readings across different dates).
+
+STEP 3 — Land-use overlay [NOT YET DONE]
+  - Pull the USDA Cropland Data Layer (CDL) — free, public,
+    satellite-derived annual land cover raster — for the upstream
+    drainage area of each candidate watershed.
+  - Compute % row-crop agriculture vs. pasture vs. forest vs. urban for
+    each watershed's contributing area.
+  - This is the step that actually tests whether "farms are the likely
+    cause" vs. other plausible sources (septic, livestock feedlots,
+    municipal discharge, urban runoff).
+
+STEP 4 — Downstream impact tracing [NOT YET DONE]
+  - Use USGS NHDPlus (National Hydrography Dataset Plus) flowline and
+    watershed boundary data to:
+    a) Confirm/visualize the exact downstream flow path from each
+       candidate HUC12 to the Mississippi River mainstem.
+    b) Quantify how many downstream miles / how many downstream HUC12s
+       are affected by each hotspot — used as a "leverage" weighting
+       factor (fixing a bigger upstream problem matters more).
+
+STEP 5 — Composite scoring [NOT YET DONE]
+  - Combine: severity (nitrate/phosphate levels) + persistence
+    (consistency over time/observations) + % agricultural land upstream
+    + downstream impact weight, into a single composite score.
+  - Produce a ranked shortlist of roughly 10-15 candidate watersheds.
+
+STEP 6 — Identify the actual farms/fields [NOT YET DONE — KEY STEP]
+  This is the step that turns "problem watershed" into "specific fields
+  to approach." Do NOT use map proximity — use actual upstream drainage
+  delineation (from Step 4's NHDPlus work) intersected with field
+  boundary data. Concrete, real public data sources to use:
+
+  a) USDA Crop Sequence Boundaries (CSB) — FREE, PUBLIC, no privacy
+     restriction. Open-source, algorithm-derived field boundaries for
+     the entire contiguous US, built from satellite imagery + historic
+     Cropland Data Layer data, with crop rotation history per field.
+     Contains NO ownership or personal identifying information — just
+     the physical field boundary and what's been grown there. This is
+     our primary source for "which fields, physically, sit in this
+     drainage area, and are they row-crop agriculture."
+
+  b) ACPF state field-boundary datasets — pre-built field boundary
+     layers (with an "isAG" flag) already assembled for ACPF use,
+     available for several Midwest states including Iowa, Illinois, and
+     Minnesota (derived originally from FSA Common Land Unit data, with
+     all ownership/personal info stripped out). Useful as a
+     cross-check against CSB and because it's already structured for
+     HUC12-based conservation planning.
+
+  c) IMPORTANT PRIVACY CAVEAT — what we CANNOT get from public data:
+     The true parcel-level ownership/operator data (USDA FSA's Common
+     Land Unit / CLU) is CONFIDENTIAL and not public, specifically to
+     protect individual farmer privacy. Public datasets (CSB, ACPF
+     field layers) intentionally strip out who owns/farms each field.
+     This means: our pipeline can tell us WHICH FIELDS (physical
+     locations) are likely contributors — it cannot tell us WHO to call.
+
+  d) Bridging that gap — actual farmer identification/outreach requires
+     a local, human step: county assessor/parcel records (public in
+     most counties, but not nationally standardized), local NRCS field
+     office relationships, or — most promising given what we already
+     have — TU chapter and state DNR contacts from Section 2, who often
+     already have established relationships with landowners in these
+     watersheds. Treat this as a partnership/outreach task, not a data
+     task.
+
+STEP 7 — Ground-truthing [NOT YET DONE — real-world phase]
+  - Conduct site visits for top candidate fields identified in Step 6.
+  - Engage local TU chapters / state DNRs / NRCS offices as on-the-ground
+    partners for farmer introductions (see 6d above).
+  - Deploy NuR2's own field-level sensors (paired flow + concentration
+    monitoring) to validate the modeled hotspot before committing to any
+    capital infrastructure siting decision.
+
+
+9. WHY WE'RE MOVING THIS WORK TO CLAUDE CODE
+-------------------------------------------------
+Two concrete, practical reasons surfaced during the chat-based work:
+
+a) NETWORK ACCESS LIMITATION
+   The chat sandbox environment used so far only has network access to
+   a short allowlist (GitHub, PyPI, npm, and similar package
+   registries). It CANNOT reach usda.gov or usgs.gov, which means Steps
+   3 and 4 above (Cropland Data Layer, NHDPlus) cannot be completed in
+   that environment. Claude Code running locally has normal, unrestricted
+   internet access.
+
+b) NO PERSISTENT PROJECT ACROSS SESSIONS
+   The chat sandbox resets between tasks — there's no lasting project
+   folder to keep building scripts, downloaded datasets, and
+   intermediate outputs across multiple work sessions. Claude Code
+   provides a real local project directory (this "nur2" folder) that
+   persists, supports iterative script development, and works well with
+   version control.
+
+This phase of the work — building a multi-step, reusable geospatial
+data pipeline — is a better fit for Claude Code than continued chat-based
+one-off analysis.
+
+
+10. CURRENT STATE OF THE PROJECT FOLDER
+--------------------------------------------
+/nur2/
+  - TUDB-241030_Distn_v03.xlsx   (source data — 2,319 observations,
+                                    11 sheets, described in Section 3)
+  - NuR2_Context_Document.txt    (this file)
+
+
+11. STARTING PROMPT FOR CLAUDE CODE
+----------------------------------------
+Paste the following as your first message to Claude Code in this
+project folder:
+
+-----------------------------------------------------------------------
+I'm building a watershed nutrient-pollution targeting pipeline for a
+project called NuR2. Please read NuR2_Context_Document.txt in this
+folder first — it has full background, the dataset description, data
+quality issues already identified, and the analysis already completed.
+
+The source data is TUDB-241030_Distn_v03.xlsx (Trout Unlimited /
+MobileH2O "Driftless Area" citizen-science water quality data, 2019-2024,
+2,319 observations, already tagged with HUC12/HUC10 watershed codes).
+
+What's already done (Steps 1-2 in the context doc): data cleaned, and a
+first-pass HUC12 watershed rollup identifying nitrate/phosphate hotspots,
+with the Volga River basin (Iowa) emerging as the top candidate cluster.
+
+IMPORTANT — before building from scratch, read Section 4B: an existing
+USDA tool (ACPF) already does field-level conservation-practice siting
+at HUC12 scale. Decide whether to use its Core Data/outputs directly,
+build on top of it, or explicitly justify why not.
+
+What I need you to help build next (Steps 3-7 in the context doc):
+1. Pull USDA Cropland Data Layer data for the upstream drainage area of
+   the top candidate watersheds, and compute % agricultural land use for
+   each, to test whether farms are a plausible nutrient source.
+2. Pull USGS NHDPlus flowline/watershed boundary data to trace the
+   downstream flow path from each candidate watershed to the Mississippi
+   River, and quantify how many downstream watersheds/miles are
+   affected by each hotspot.
+3. Build a composite scoring model combining severity, persistence,
+   % agricultural land, and downstream impact, to produce a ranked
+   shortlist of the top 10-15 candidate watersheds.
+4. For the top candidates, pull USDA Crop Sequence Boundaries (CSB) and/
+   or ACPF state field-boundary data to identify the SPECIFIC FIELDS
+   (not just the watershed) most likely contributing runoff — see
+   Step 6 for exact sources and the ownership-privacy caveat (public
+   data gives field locations, not farmer identities — that requires
+   local partner outreach, e.g. via TU chapters/NRCS).
+5. Set this up as a reusable, well-documented Python pipeline (not just
+   one-off scripts) so we can re-run it as more data comes in.
+
+Start by re-familiarizing yourself with the Excel file structure, then
+propose a concrete plan for pulling the Cropland Data Layer, NHDPlus,
+and CSB/ACPF data before writing code.
+-----------------------------------------------------------------------
+
+
+12. SOURCES & REFERENCES COMPILED SO FAR
+----------------------------------------------
+Edge-of-field nutrient capture technology (background/validation):
+  - USDA NRCS / The Nature Conservancy, "A Roadmap to Advance Edge of
+    Field Practices in Agriculture" — overview of practice types and
+    cost-effectiveness data:
+    https://www.nature.org/content/dam/tnc/nature/en/documents/EOF_Report_LORES_SPREADS.pdf
+  - Illinois Sustainable Technology Center / Univ. of Illinois —
+    combined woodchip bioreactor + biochar system for removing both
+    nitrogen AND phosphorus (most bioreactors only handle nitrogen):
+    https://www.miragenews.com/new-system-cuts-nitrogen-phosphorus-in-farm-1627376/
+  - IntechOpen chapter on denitrification bioreactor performance and
+    design: field-scale nitrate reduction results.
+    https://intechopen.com/books/soil-contamination-current-consequences-and-further-solutions/edge-of-field-technology-to-eliminate-nutrient-transport-from-croplands-specific-focus-on-denitrific
+
+Existing watershed-scale siting tool (prior art, see Section 4B):
+  - ACPF National Hub (overview, framework, training):
+    https://acpf4watersheds.org/
+  - ACPF Toolbox access + Core Data description (HUC12-based, field
+    boundary + soils + elevation data):
+    https://acpf4watersheds.org/toolbox
+  - NOAA Climate Resilience Toolkit summary of ACPF capabilities:
+    https://toolkit.climate.gov/tool/agricultural-conservation-planning-framework-acpf-toolbox
+
+Field boundary / farm identification data sources (see Step 6):
+  - USDA NASS Crop Sequence Boundaries (CSB) — free field-level
+    boundaries + crop rotation history, no ownership data:
+    https://www.nass.usda.gov/Research_and_Science/Crop-Sequence-Boundaries/index.php
+  - USDA Ag Data Commons — ACPF-ready field boundary datasets for Iowa,
+    Illinois, and Minnesota (derived from de-identified FSA CLU data):
+    https://data.nal.usda.gov/dataset/agricultural-land-use-field-iowa-2010-2019
+    https://data.nal.usda.gov/dataset/agricultural-land-use-field-illinois-2010-2020
+  - Background on FSA Common Land Unit (CLU) and why true ownership data
+    is confidential/not public:
+    https://www.fgdc.gov/geospatial-lob/documents/USDA_CLU_factsheet.pdf
+
+Data sources still to pull directly (Steps 3-4, not yet fetched):
+  - USDA Cropland Data Layer (CDL) — annual land cover raster, via
+    CropScape / NASS Geospatial Data Gateway
+  - USGS NHDPlus — flowline + watershed boundary network, via USGS
+    National Hydrography Dataset distribution
+
+These are starting points, not an exhaustive literature review — Claude
+Code (or the Research feature) should expand this list as the pipeline
+work progresses, particularly for nutrient credit trading market
+precedents (Step on economic model) and any existing NuR2 competitors
+in the AI-driven watershed targeting space.
+
+
+END OF CONTEXT DOCUMENT
