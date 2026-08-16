@@ -2,3 +2,6 @@ pandas
 openpyxl
 requests
 shapely
+pyproj
+rasterio
+fiona

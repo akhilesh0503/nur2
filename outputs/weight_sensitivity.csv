@@ -1,0 +1,22 @@
+huc12_code,huc12_name,n_schemes_in_top15,in_all_schemes,missing_from
+070400080403,Canfield Creek,5,True,
+070400040503,Cold Creek,5,True,
+070600040504,Coulee Creek-Volga River,5,True,
+070400080404,Forestville Creek,5,True,
+070600040502,Headwaters Volga River,5,True,
+070600040503,Little Volga River,5,True,
+070400040505,Long Creek,5,True,
+070300051105,Lower Kinnickinnic Pond-Kinnickinnic River,5,True,
+070400010205,South Branch Vermillion River,5,True,
+070400020902,Trout Brook,5,True,
+070400030305,Middle Fork Whitewater River,4,False,equal (25/25/25/25)
+070600040501,North Branch Volga River,4,False,equal (25/25/25/25)
+070600040601,Brush Creek,3,False,"equal (25/25/25/25), original (40/20/20/20)"
+070400080402,Etna Creek-South Branch Root River,3,False,"ag-land-heavy (30/15/45/10), equal (25/25/25/25)"
+070400040205,South Branch Middle Fork Zumbro River,3,False,"ag-land-heavy (30/15/45/10), no downstream (45/25/30/0)"
+070400080203,Kedron Creek,2,False,"no downstream (45/25/30/0), original (40/20/20/20), severity-heavy (55/15/15/15)"
+070300051104,Parker Creek-Kinnickinnic River,2,False,"ag-land-heavy (30/15/45/10), no downstream (45/25/30/0), severity-heavy (55/15/15/15)"
+070400010401,Hay Creek,1,False,"ag-land-heavy (30/15/45/10), no downstream (45/25/30/0), original (40/20/20/20), severity-heavy (55/15/15/15)"
+070400020702,Middle Little Cannon River,1,False,"ag-land-heavy (30/15/45/10), no downstream (45/25/30/0), original (40/20/20/20), severity-heavy (55/15/15/15)"
+070600040602,Mink Creek,1,False,"ag-land-heavy (30/15/45/10), equal (25/25/25/25), original (40/20/20/20), severity-heavy (55/15/15/15)"
+070400080205,Spring Valley Creek,1,False,"equal (25/25/25/25), no downstream (45/25/30/0), original (40/20/20/20), severity-heavy (55/15/15/15)"

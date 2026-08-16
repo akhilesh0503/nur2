@@ -3,3 +3,5 @@ data/processed/
 __pycache__/
 *.pyc
 .venv/
+.claude/
+.pytest_cache/
